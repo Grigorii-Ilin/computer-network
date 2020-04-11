@@ -151,10 +151,6 @@
     <ClCompile Include="client.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
     </ClCompile>
-    <ClCompile Include="vigenere_lib.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="vigenere_lib.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
