@@ -3,56 +3,56 @@
 #include <locale.h>
 
 #define PORT 3550 
-#define MAXDATASIZE 254
+//#define MAXDATASIZE 254
 #define SIZE 1024
 //#define PATH_MAX 255
 
 
-int sendName(int sockfd, char* name);
-int getNameFromPath(char* path, char* name);
-int sendFile(int sockfd, char* path);
-
-
-int sendFile(int sockfd, char* path) {
-	FILE* fd = fopen(path, "r");
-	if (!fd) {
-		perror("Error: fopen");
-		return 2;
-	}
-	char* buff = (char*)calloc(sizeof(char), SIZE);
-	if (!buff) {
-		printf("Error: Failed to allocate memory");
-		return 3;
-	}
-
-	int read = 0;
-	//send filename, MD5 then file
-	if (sendName(sockfd, path) < 0) {
-		perror("Error: sendName");
-		return -1;
-	}
-	if (sendMD5(sockfd, fd) < 0) {
-		perror("Error: sendMD5");
-		return -1;
-	}
-	while ((read = fread(buff, sizeof(char), SIZE, fd)) > 0) {
-		if (send(sockfd, buff, read, 0) != read) {
-			perror("Error: send");
-			return 4;
-		}
-	}
-	free(buff);
-	if (feof(fd)) {
-		printf("File sent");
-	}
-	if (ferror(fd)) {
-		perror("Error: read");
-		fclose(fd);
-		return -1;
-	}
-	fclose(fd);
-	return 1;
-}
+//int sendName(int sockfd, char* name);
+//int getNameFromPath(char* path, char* name);
+//int sendFile(int sockfd, char* path);
+//
+//
+//int sendFile(int sockfd, char* path) {
+//	FILE* fd = fopen(path, "r");
+//	if (!fd) {
+//		perror("Error: fopen");
+//		return 2;
+//	}
+//	char* buff = (char*)calloc(sizeof(char), SIZE);
+//	if (!buff) {
+//		printf("Error: Failed to allocate memory");
+//		return 3;
+//	}
+//
+//	int read = 0;
+//	//send filename, MD5 then file
+//	if (sendName(sockfd, path) < 0) {
+//		perror("Error: sendName");
+//		return -1;
+//	}
+//	if (sendMD5(sockfd, fd) < 0) {
+//		perror("Error: sendMD5");
+//		return -1;
+//	}
+//	while ((read = fread(buff, sizeof(char), SIZE, fd)) > 0) {
+//		if (send(sockfd, buff, read, 0) != read) {
+//			perror("Error: send");
+//			return 4;
+//		}
+//	}
+//	free(buff);
+//	if (feof(fd)) {
+//		printf("File sent");
+//	}
+//	if (ferror(fd)) {
+//		perror("Error: read");
+//		fclose(fd);
+//		return -1;
+//	}
+//	fclose(fd);
+//	return 1;
+//}
 
 ////convert path to name and send it throught socket
 //int sendName(int sockfd, char* path) {
@@ -87,6 +87,8 @@ int main(int argc, char* argv[]){
 	//char key[255];
 	//scanf_s("%254s", key, 255);
 
+	FILE *inputedFile = fopen(argv[1], "rb");
+
 	WSADATA wsdata;
 	//https://docs.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-wsastartup
 	WSAStartup(MAKEWORD(2, 2), &wsdata);
@@ -108,12 +110,22 @@ int main(int argc, char* argv[]){
 
 	//decrypt(key, strlen(key), buf, numbytes);
 
-	send(iConnectedSocket, sname, MAXDATASIZE * sizeof(char), 0);
+	//send(iConnectedSocket, sname, MAXDATASIZE * sizeof(char), 0);
 
-	send(iConnectedSocket, buf, (int)strlen(buf), 0);
+	//send(iConnectedSocket, buf, (int)strlen(buf), 0);
+
+
+	char buffer[SIZE];
+
+	while (!feof(inputedFile)) {
+		fread(buffer, sizeof(char), SIZE, inputedFile);
+		send(iConnectedSocket, buffer, SIZE, 0);
+	}
 
 	closesocket(iConnectedSocket);
 	WSACleanup();
+
+	fclose(inputedFile);
 
 	return 0;
 }

@@ -18,13 +18,5 @@
     <ClCompile Include="server.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vigenere_lib.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="vigenere_lib.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
