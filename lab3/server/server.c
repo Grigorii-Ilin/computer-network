@@ -5,20 +5,27 @@
 
 
 #define PORT 3550
-#define MAXDATASIZE 250 
+#define MAX_DATA_SIZE 250 
+
+
+void clearBuf(char* b) {
+    int i;
+    for (i = 0; i < MAX_DATA_SIZE; i++)
+        b[i] = '\0';
+}
 
 int main() {
     setlocale(LC_ALL, "RUS");
 
-    printf("%s", "Введите пароль (A-Z):\n");
-    char key[255];
-    scanf_s("%254s", key, 255);
+    //printf("%s", "Введите пароль (A-Z):\n");
+    //char key[255];
+    //scanf_s("%254s", key, 255);
 
-    printf("%s", "Введите текст для шифрования (A-Z):\n");
-    char txt[255];
-    scanf_s("%254s", txt, 255);
+    //printf("%s", "Введите текст для шифрования (A-Z):\n");
+    //char txt[255];
+    //scanf_s("%254s", txt, 255);
 
-    encrypt(key, strlen(key), txt, strlen(txt));
+    //encrypt(key, strlen(key), txt, strlen(txt));
 
     WSADATA wsdata; 
     //https://docs.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-wsastartup
@@ -42,13 +49,27 @@ int main() {
     int sin_size;
     sin_size = sizeof(struct sockaddr_in);
     iSocket2 = accept(iSocket1, (struct sockaddr*) & client, &sin_size);
-    send(iSocket2, txt, (int)strlen(txt), 0);
+    //send(iSocket2, txt, (int)strlen(txt), 0);
  
     int numbytes;
-    char buf[MAXDATASIZE];
-    numbytes = recv(iSocket2, buf, MAXDATASIZE, 0);// like read in linux
-    buf[numbytes] = '\0';
-    printf("Сообщение от клиента: %s\n", buf);
+
+    char fileName[MAX_DATA_SIZE];  
+    numbytes = recv(iSocket2, fileName, MAX_DATA_SIZE, 0);
+    //fileName[numbytes+1] = '\0';
+    printf("Имя файла: %s\n", fileName);
+
+    
+    //clearBuf(buf);
+    char fileLen[MAX_DATA_SIZE];
+    numbytes = recv(iSocket2, fileLen, MAX_DATA_SIZE, 0);// like read in linux
+    //fileLen[numbytes] = '\0';
+    printf("Длина файла в байтах: %s\n", fileLen);
+
+    int fileLenInt = atoi(fileLen);
+
+
+
+
 
     closesocket(iSocket2);
     WSACleanup();

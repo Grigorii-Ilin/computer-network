@@ -1,10 +1,12 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <windows.h> 
 #include <stdio.h> 
 #include <locale.h>
 
 #define PORT 3550 
 //#define MAXDATASIZE 254
-#define SIZE 1024
+#define MAXZ_FILE_BUFFER_SIZE 1024
 //#define PATH_MAX 255
 
 
@@ -80,6 +82,15 @@
 //}
 
 
+int fsize(FILE* fp) {
+	int prev = ftell(fp);
+	fseek(fp, 0L, SEEK_END);
+	int sz = ftell(fp);
+	fseek(fp, prev, SEEK_SET); //go back to where we were
+	return sz;
+}
+
+
 int main(int argc, char* argv[]){
 	setlocale(LC_ALL, "RUS");
 
@@ -110,16 +121,19 @@ int main(int argc, char* argv[]){
 
 	//decrypt(key, strlen(key), buf, numbytes);
 
-	//send(iConnectedSocket, sname, MAXDATASIZE * sizeof(char), 0);
+	send(iConnectedSocket, argv[1], strlen(argv[1]) * sizeof(char)+ sizeof(char), 0);
 
-	//send(iConnectedSocket, buf, (int)strlen(buf), 0);
+	char digits[20];
+	_itoa(fsize(inputedFile), digits, 10);
+	//printf(digits);
+	send(iConnectedSocket, digits, strlen(digits) * sizeof(char) + sizeof(char), 0);
 
 
-	char buffer[SIZE];
+	char buffer[MAXZ_FILE_BUFFER_SIZE];
 
 	while (!feof(inputedFile)) {
-		fread(buffer, sizeof(char), SIZE, inputedFile);
-		send(iConnectedSocket, buffer, SIZE, 0);
+		fread(buffer, sizeof(char), MAXZ_FILE_BUFFER_SIZE, inputedFile);
+		send(iConnectedSocket, buffer, MAXZ_FILE_BUFFER_SIZE, 0);
 	}
 
 	closesocket(iConnectedSocket);
