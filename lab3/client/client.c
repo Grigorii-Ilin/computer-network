@@ -6,7 +6,8 @@
 
 #define PORT 3550 
 //#define MAXDATASIZE 254
-#define MAXZ_FILE_BUFFER_SIZE 1024
+#define MAX_DATA_SIZE 250 
+#define MAX_FILE_BUFFER_SIZE 1024
 //#define PATH_MAX 255
 
 
@@ -91,14 +92,20 @@ int fsize(FILE* fp) {
 }
 
 
-int main(int argc, char* argv[]){
+void getOKFromServer(int socket) {
+	char tmp[MAX_DATA_SIZE];
+	recv(socket, tmp, MAX_DATA_SIZE, 0);
+}
+
+
+int main(int argc, char* argv[]) {
 	setlocale(LC_ALL, "RUS");
 
 	//printf("%s", "¬ведите пароль (A-Z):\n");
 	//char key[255];
 	//scanf_s("%254s", key, 255);
 
-	FILE *inputedFile = fopen(argv[1], "rb");
+	FILE* inputedFile = fopen(argv[1], "r+");
 
 	WSADATA wsdata;
 	//https://docs.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-wsastartup
@@ -121,19 +128,22 @@ int main(int argc, char* argv[]){
 
 	//decrypt(key, strlen(key), buf, numbytes);
 
-	send(iConnectedSocket, argv[1], strlen(argv[1]) * sizeof(char)+ sizeof(char), 0);
+	send(iConnectedSocket, argv[1], strlen(argv[1]) * sizeof(char) + sizeof(char), 0);
+	getOKFromServer(iConnectedSocket);
 
-	char digits[20];
+	char digits[17];
 	_itoa(fsize(inputedFile), digits, 10);
 	//printf(digits);
 	send(iConnectedSocket, digits, strlen(digits) * sizeof(char) + sizeof(char), 0);
+	getOKFromServer(iConnectedSocket);
 
 
-	char buffer[MAXZ_FILE_BUFFER_SIZE];
+	char buffer[MAX_FILE_BUFFER_SIZE];
 
 	while (!feof(inputedFile)) {
-		fread(buffer, sizeof(char), MAXZ_FILE_BUFFER_SIZE, inputedFile);
-		send(iConnectedSocket, buffer, MAXZ_FILE_BUFFER_SIZE, 0);
+		int bytesReaded = fread(buffer, sizeof(char), MAX_FILE_BUFFER_SIZE, inputedFile);
+		send(iConnectedSocket, buffer, bytesReaded, 0);
+		getOKFromServer(iConnectedSocket);
 	}
 
 	closesocket(iConnectedSocket);

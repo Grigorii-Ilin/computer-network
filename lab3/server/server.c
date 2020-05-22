@@ -1,4 +1,4 @@
-#include <stdio.h> 
+Ôªø#include <stdio.h> 
 #include <windows.h>
 #include <locale.h>
 
@@ -6,6 +6,7 @@
 
 #define PORT 3550
 #define MAX_DATA_SIZE 250 
+#define MAX_FILE_BUFFER_SIZE 1024
 
 
 void clearBuf(char* b) {
@@ -14,14 +15,20 @@ void clearBuf(char* b) {
         b[i] = '\0';
 }
 
+
+void sendOK(int sock) {
+    send(sock, "OK\0", (int)strlen("OK\0")+1, 0);
+}
+
+
 int main() {
     setlocale(LC_ALL, "RUS");
 
-    //printf("%s", "¬‚Â‰ËÚÂ Ô‡ÓÎ¸ (A-Z):\n");
+    //printf("%s", "–í–≤–µ–¥–∏—Ç–µ –ø–∞—Ä–æ–ª—å (A-Z):\n");
     //char key[255];
     //scanf_s("%254s", key, 255);
 
-    //printf("%s", "¬‚Â‰ËÚÂ ÚÂÍÒÚ ‰Îˇ ¯ËÙÓ‚‡ÌËˇ (A-Z):\n");
+    //printf("%s", "–í–≤–µ–¥–∏—Ç–µ —Ç–µ–∫—Å—Ç –¥–ª—è —à–∏—Ñ—Ä–æ–≤–∞–Ω–∏—è (A-Z):\n");
     //char txt[255];
     //scanf_s("%254s", txt, 255);
 
@@ -41,7 +48,7 @@ int main() {
 
     bind(iSocket1, (struct sockaddr*) & server, sizeof(struct sockaddr));
 
-    printf("%s", "ŒÊË‰‡ÂÏ ÍÎËÂÌÚ‡...\n");
+    printf("%s", "–û–∂–∏–¥–∞–µ–º –∫–ª–∏–µ–Ω—Ç–∞...\n");
     listen(iSocket1, 1);
 
     int iSocket2;
@@ -56,19 +63,29 @@ int main() {
     char fileName[MAX_DATA_SIZE];  
     numbytes = recv(iSocket2, fileName, MAX_DATA_SIZE, 0);
     //fileName[numbytes+1] = '\0';
-    printf("»Ïˇ Ù‡ÈÎ‡: %s\n", fileName);
+    printf("–ò–º—è —Ñ–∞–π–ª–∞: %s\n", fileName);
+    sendOK(iSocket2);
 
     
     //clearBuf(buf);
     char fileLen[MAX_DATA_SIZE];
     numbytes = recv(iSocket2, fileLen, MAX_DATA_SIZE, 0);// like read in linux
     //fileLen[numbytes] = '\0';
-    printf("ƒÎËÌ‡ Ù‡ÈÎ‡ ‚ ·‡ÈÚ‡ı: %s\n", fileLen);
-
-    int fileLenInt = atoi(fileLen);
-
+    printf("–î–ª–∏–Ω–∞ —Ñ–∞–π–ª–∞ –≤ –±–∞–π—Ç–∞—Ö: %s\n", fileLen);
+    sendOK(iSocket2);
 
 
+    //************************int fileLenInt = atoi(fileLen);
+    FILE* file = fopen(fileName, "w+");
+    char buffer[MAX_FILE_BUFFER_SIZE];
+    while ((recv(iSocket2, buffer, MAX_FILE_BUFFER_SIZE, 0)) > 0) {
+        //printf("%s", buffer);       
+        sendOK(iSocket2);
+        fwrite(buffer, sizeof(char), strlen(buffer), file);
+        clearBuf(buffer);
+    }
+    printf("–§–∞–π–ª %s —Å–æ—Ö—Ä–∞–Ω–µ–Ω\n", fileName);
+    fclose(file);
 
 
     closesocket(iSocket2);
