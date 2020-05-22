@@ -3,107 +3,51 @@
 #include <windows.h> 
 #include <stdio.h> 
 #include <locale.h>
-
-#define PORT 3550 
-//#define MAXDATASIZE 254
-#define MAX_DATA_SIZE 250 
-#define MAX_FILE_BUFFER_SIZE 1024
-//#define PATH_MAX 255
+#include "client.h"
 
 
-//int sendName(int sockfd, char* name);
-//int getNameFromPath(char* path, char* name);
-//int sendFile(int sockfd, char* path);
-//
-//
-//int sendFile(int sockfd, char* path) {
-//	FILE* fd = fopen(path, "r");
-//	if (!fd) {
-//		perror("Error: fopen");
-//		return 2;
-//	}
-//	char* buff = (char*)calloc(sizeof(char), SIZE);
-//	if (!buff) {
-//		printf("Error: Failed to allocate memory");
-//		return 3;
-//	}
-//
-//	int read = 0;
-//	//send filename, MD5 then file
-//	if (sendName(sockfd, path) < 0) {
-//		perror("Error: sendName");
-//		return -1;
-//	}
-//	if (sendMD5(sockfd, fd) < 0) {
-//		perror("Error: sendMD5");
-//		return -1;
-//	}
-//	while ((read = fread(buff, sizeof(char), SIZE, fd)) > 0) {
-//		if (send(sockfd, buff, read, 0) != read) {
-//			perror("Error: send");
-//			return 4;
-//		}
-//	}
-//	free(buff);
-//	if (feof(fd)) {
-//		printf("File sent");
-//	}
-//	if (ferror(fd)) {
-//		perror("Error: read");
-//		fclose(fd);
-//		return -1;
-//	}
-//	fclose(fd);
-//	return 1;
-//}
-
-////convert path to name and send it throught socket
-//int sendName(int sockfd, char* path) {
-//	char* sname = (char*)calloc(sizeof(char), MAXDATASIZE);
-//	getNameFromPath(path, sname);
-//	int res = send(sockfd, sname, MAXDATASIZE * sizeof(char), 0);
-//	free(sname);
-//	return res;
-//}
-//
-//
-//
-//int getNameFromPath(char* path, char* name) {
-//	char* c = path;
-//	int pos = -1;
-//	int i = 0;
-//	for (; *c; i++) {
-//		if (*c++ == '/')
-//			pos = i;
-//	}
-//	if (path[pos + 1] != '\0') {
-//		strcpy(name, path + pos + 1);
-//	}
-//	return 0;
-//}
-
-
-int fsize(FILE* fp) {
-	int prev = ftell(fp);
-	fseek(fp, 0L, SEEK_END);
-	int sz = ftell(fp);
-	fseek(fp, prev, SEEK_SET); //go back to where we were
+int f_size(const FILE* f) {
+	int prev = ftell(f);
+	fseek(f, 0L, SEEK_END);
+	int sz = ftell(f);
+	fseek(f, prev, SEEK_SET); //go back to where we were
 	return sz;
 }
 
 
-void getOKFromServer(int socket) {
+void get_ok_from_server(const int socket) {
 	char tmp[MAX_DATA_SIZE];
 	recv(socket, tmp, MAX_DATA_SIZE, 0);
 }
 
 
+void send_file_name(const int socket, const char* fileName) {
+	send(socket, fileName, strlen(fileName) * sizeof(char) + sizeof(char), 0);
+	get_ok_from_server(socket);
+}
+
+
+void send_file_size(const int socket, const FILE* f) {
+	char digits[17];
+	_itoa(f_size(f), digits, 10);
+	send(socket, digits, strlen(digits) * sizeof(char) + sizeof(char), 0);
+	get_ok_from_server(socket);
+}
+
+
+void send_file(const int socket, const FILE* f) {
+	char buffer[MAX_FILE_BUFFER_SIZE];
+
+	while (!feof(f)) {
+		int bytesReaded = fread(buffer, sizeof(char), MAX_FILE_BUFFER_SIZE, f);
+		send(socket, buffer, bytesReaded, 0);
+		get_ok_from_server(socket);
+	}
+}
+
+
 int main(int argc, char* argv[]) {
 	setlocale(LC_ALL, "RUS");
-
-	//printf("%s", "¬ведите пароль (A-Z):\n");
-	//char key[255];
-	//scanf_s("%254s", key, 255);
 
 	FILE* inputedFile = fopen(argv[1], "r+");
 
@@ -121,30 +65,9 @@ int main(int argc, char* argv[]) {
 
 	connect(iConnectedSocket, (struct sockaddr*) & server, sizeof(struct sockaddr));
 
-	//char buf[MAXDATASIZE];
-	//int numbytes = recv(iConnectedSocket, buf, MAXDATASIZE, 0);
-	//buf[numbytes] = '\0';
-	//printf("—ообщение от сервера: %s\n", buf);
-
-	//decrypt(key, strlen(key), buf, numbytes);
-
-	send(iConnectedSocket, argv[1], strlen(argv[1]) * sizeof(char) + sizeof(char), 0);
-	getOKFromServer(iConnectedSocket);
-
-	char digits[17];
-	_itoa(fsize(inputedFile), digits, 10);
-	//printf(digits);
-	send(iConnectedSocket, digits, strlen(digits) * sizeof(char) + sizeof(char), 0);
-	getOKFromServer(iConnectedSocket);
-
-
-	char buffer[MAX_FILE_BUFFER_SIZE];
-
-	while (!feof(inputedFile)) {
-		int bytesReaded = fread(buffer, sizeof(char), MAX_FILE_BUFFER_SIZE, inputedFile);
-		send(iConnectedSocket, buffer, MAX_FILE_BUFFER_SIZE, 0);
-		getOKFromServer(iConnectedSocket);
-	}
+	send_file_name(iConnectedSocket, argv[1]);
+	send_file_size(iConnectedSocket, inputedFile);
+	send_file(iConnectedSocket, inputedFile);
 
 	closesocket(iConnectedSocket);
 	WSACleanup();
