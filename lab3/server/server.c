@@ -20,7 +20,11 @@ void send_ok(const int socket) {
 void show_stats(struct Statistics stats[], int statsLen) {
     printf("\n***********\n");
     for (int i = 0; i < statsLen; i++) {
-        printf("client id: %d, file name: %s, file size: %d", stats[i].client_id, stats[i].file_name, stats[i].file_size);
+        printf("Клиент №: %d, Имя файла: %s, Размер файла в байтах: %d\n", 
+            stats[i].client_id, 
+            stats[i].file_name, 
+            stats[i].file_size
+        );
     }
 }
 
@@ -58,7 +62,7 @@ int main() {
         sin_size = sizeof(struct sockaddr_in);
         iSocket2 = accept(iSocket1, (struct sockaddr*) & client, &sin_size);
 
-        printf("Порт клиента: %d", client.sin_port);
+        printf("Клиент №: %d\n", client.sin_port);
         statistics[statIndex].client_id = client.sin_port;
 
  
@@ -73,11 +77,12 @@ int main() {
         char fileLen[MAX_DATA_SIZE];
         numbytes = recv(iSocket2, fileLen, MAX_DATA_SIZE, 0);// like read in linux
         statistics[statIndex].file_size = atoi(fileLen);
-        printf("Длина файла в байтах: %d\n", statistics[statIndex].file_size);
+        printf("Размер файла в байтах: %d\n", statistics[statIndex].file_size);
         send_ok(iSocket2);
 
 
-        FILE* file = fopen(statistics[statIndex].file_name, "w+");
+        const char* mode = strstr(statistics[statIndex].file_name, ".txt") ? "w+" : "wb+";
+        FILE* file = fopen(statistics[statIndex].file_name, mode);
         char buffer[MAX_FILE_BUFFER_SIZE];
         while ((recv(iSocket2, buffer, MAX_FILE_BUFFER_SIZE, 0)) > 0) {
             fwrite(buffer, sizeof(char), strlen(buffer), file);

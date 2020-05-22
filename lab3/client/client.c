@@ -46,10 +46,12 @@ void send_file(const int socket, const FILE* f) {
 }
 
 
+//example for run:	client.exe 1.txt
 int main(int argc, char* argv[]) {
 	setlocale(LC_ALL, "RUS");
 
-	FILE* inputedFile = fopen(argv[1], "r+");
+	const char* mode = strstr(argv[1], ".txt") ? "r+" : "rb+";
+	FILE* inputedFile = fopen(argv[1], mode);
 
 	WSADATA wsdata;
 	//https://docs.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-wsastartup
