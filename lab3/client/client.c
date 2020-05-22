@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
 
 	while (!feof(inputedFile)) {
 		int bytesReaded = fread(buffer, sizeof(char), MAX_FILE_BUFFER_SIZE, inputedFile);
-		send(iConnectedSocket, buffer, bytesReaded, 0);
+		send(iConnectedSocket, buffer, MAX_FILE_BUFFER_SIZE, 0);
 		getOKFromServer(iConnectedSocket);
 	}
 
